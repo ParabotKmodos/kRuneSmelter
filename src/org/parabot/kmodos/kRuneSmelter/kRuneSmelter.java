@@ -49,6 +49,7 @@ public class kRuneSmelter extends Script implements Paintable{
 	private int furnaceId = 11666;
 	private String status = "Waiting for input!";
 	private boolean forceInterface = false;
+	private boolean butlerBanking = false;
 
 	//Constants
 
@@ -63,8 +64,8 @@ public class kRuneSmelter extends Script implements Paintable{
 
 	private final int OBJ_BANKBOOTH = 2213;
 	private final int OBJ_FURNACE_PREM = 3994,
-				      OBJ_FURNACE_FALLY = 11666,
-			          OBJ_FURNACE_CRAFTING_GUILD = 2643;
+			OBJ_FURNACE_FALLY = 11666,
+			OBJ_FURNACE_CRAFTING_GUILD = 2643;
 
 	private final int ITEM_COAL = 453;
 	private final int ITEM_RUNEORE = 451;
@@ -111,7 +112,7 @@ public class kRuneSmelter extends Script implements Paintable{
 		strats.add(new Antis());
 		strats.add(new Banker());
 		if(!forceInterface){
-		strats.add(new Smelt());
+			strats.add(new Smelt());
 		}else{
 			strats.add(new ForceInterfaceSmelt());
 		}
@@ -165,9 +166,9 @@ public class kRuneSmelter extends Script implements Paintable{
 			Menu.sendAction(315, 655, 0, 7449);
 			Time.sleep(4500,5000);
 		}
-		
+
 	}
-	
+
 	public class Smelt implements Strategy{
 
 		@Override
@@ -216,9 +217,31 @@ public class kRuneSmelter extends Script implements Paintable{
 				}, 1500);
 			}
 			Time.sleep(2500,3000);
-			SceneObject bankBooth = SceneObjects.getClosest(OBJ_BANKBOOTH);
-			if(bankBooth != null){
-				Menu.sendAction(502, bankBooth.getHash(), bankBooth.getLocalRegionX(), bankBooth.getLocalRegionY());
+			if(!butlerBanking && !forceInterface){
+				SceneObject bankBooth = SceneObjects.getClosest(OBJ_BANKBOOTH);
+				if(bankBooth != null){
+					Menu.sendAction(502, bankBooth.getHash(), bankBooth.getLocalRegionX(), bankBooth.getLocalRegionY());
+					Time.sleep(new SleepCondition() {
+						@Override
+						public boolean isValid() {
+							return Loader.getClient().getOpenInterfaceId() == INTERFACE_BANK;
+						}
+					}, 5000);
+					barsMade = (int) ((Skill.SMITHING.getExperience() - EXP_SMITHING_START)/10000);
+					depositAll();
+					Menu.sendAction(78, ITEM_RUNEORE, 1, 5382);
+					Time.sleep(100);
+					Menu.sendAction(867, ITEM_COAL, 0, 5382);
+					Time.sleep(100);
+					Menu.sendAction(867, ITEM_COAL, 0, 5382);
+					Time.sleep(750,1000);
+				}
+			}else{
+				Npc banker = Npcs.getNearest(4241)[0];
+				if(banker == null){
+					return;
+				}
+				Menu.sendAction(225, banker.getIndex(), 0, 0);
 				Time.sleep(new SleepCondition() {
 					@Override
 					public boolean isValid() {
@@ -365,9 +388,9 @@ public class kRuneSmelter extends Script implements Paintable{
 		private Container locationCont;
 		private JComboBox<String> locationSelector;
 		private JLabel locationLabel;
-		
-		private String[] locations = {"Falador", "Premium Zone", "Crafting Guild", "Force Interface"};
-		
+
+		private String[] locations = {"Falador", "Premium Zone", "Crafting Guild", "Force Interface", "Force Interface w/ Butler"};
+
 		private final String TITLE = "kRuneSmelter";
 		private final int WIDTH = 200;
 		private final int HIEGHT = 75;
@@ -383,7 +406,7 @@ public class kRuneSmelter extends Script implements Paintable{
 
 			locationSelector = new JComboBox<>(locations);
 			locationLabel = new JLabel(" Location: ");
-			
+
 			start = new JButton("Start");
 			start.addActionListener(this);
 
@@ -392,7 +415,7 @@ public class kRuneSmelter extends Script implements Paintable{
 
 			locationCont.add(locationLabel);
 			locationCont.add(locationSelector);
-			
+
 			cont.add(locationCont);
 			cont.add(start);
 
@@ -418,6 +441,9 @@ public class kRuneSmelter extends Script implements Paintable{
 				case 3:
 					forceInterface = true;
 					break;
+				case 4: 
+					forceInterface = true;
+					butlerBanking = true;
 				}
 				setVisible(false);
 				dispose();
