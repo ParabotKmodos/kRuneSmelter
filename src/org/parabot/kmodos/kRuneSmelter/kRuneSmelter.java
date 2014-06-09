@@ -47,6 +47,7 @@ public class kRuneSmelter extends Script implements Paintable{
 	private int barsMade = 0;
 	private int lastState = 1;
 	private int furnaceId = 11666;
+	private String status = "Waiting for input!";
 
 	//Constants
 
@@ -135,6 +136,7 @@ public class kRuneSmelter extends Script implements Paintable{
 		g.drawString("Randoms Solved: " + rCount, 225, 285);
 		g.drawString("Smithing Exp: " + getExpString(), 225, 300);
 		g.drawString("Smithing Level: " + getLvlString(), 225, 315);
+		g.drawString("Status: " + status, 121, 330);
 	}
 
 	/*
@@ -154,6 +156,7 @@ public class kRuneSmelter extends Script implements Paintable{
 
 		@Override
 		public void execute() {
+			status = "Making Bars!";
 			lastState = STATE_SMELT;
 			SceneObject furnace = SceneObjects.getClosest(furnaceId);
 			if(furnace != null){
@@ -179,6 +182,7 @@ public class kRuneSmelter extends Script implements Paintable{
 
 		@Override
 		public void execute() {
+			status = "Banking!";
 			lastState = STATE_BANK;
 			if(falador){
 				Menu.sendAction(315, 151437312, 508, 1195);
@@ -221,6 +225,7 @@ public class kRuneSmelter extends Script implements Paintable{
 
 		@Override
 		public void execute() {
+			status = "Teleporting to Furnace!";
 			lastState = STATE_TELE;
 			//Skills Tele
 			Menu.sendAction(315, 20938752, 361, 1170);
@@ -260,6 +265,7 @@ public class kRuneSmelter extends Script implements Paintable{
 
 		@Override
 		public void execute(){
+			status = "Solving Random!";
 			sleep(750);
 			Npc[] n = Npcs.getNearest(RANDOMS);
 			System.out.println("There is a random nearby!");
@@ -314,6 +320,7 @@ public class kRuneSmelter extends Script implements Paintable{
 		}
 
 		public void execute(){ 
+			status = "Relogging!";
 			System.out.println("Relogging");
 			if (!isLoggedIn()){
 				Keyboard.getInstance().sendKeys("");
