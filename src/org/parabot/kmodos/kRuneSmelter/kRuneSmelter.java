@@ -10,7 +10,6 @@ import java.awt.Point;
 import java.awt.Polygon;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 
 import javax.swing.*;
@@ -36,15 +35,14 @@ import org.rev317.min.api.wrappers.SceneObject;
 import org.rev317.min.api.wrappers.Tile;
 
 
-@ScriptManifest(author = "Kmodos", category = Category.SMITHING, description = "Smelts Rune Bars at Fally or Premium zone", name = "kRuneSmelter", servers = { "PKHonor" }, version = 1)
+@ScriptManifest(author = "Kmodos", category = Category.SMITHING, description = "Smelts Rune Bars at Fally, Premium zone, or the Crafting Guild", name = "kRuneSmelter", servers = { "PKHonor" }, version = 1)
 public class kRuneSmelter extends Script implements Paintable{
 
 	/*
 	 * Vars
 	 */
 	private ArrayList<Strategy> strats = new ArrayList<Strategy>();
-	private String password;
-	private boolean premZone = false;
+	private boolean falador = false;
 	private boolean guiDone = false;
 	private int barsMade = 0;
 	private int lastState = 1;
@@ -55,13 +53,16 @@ public class kRuneSmelter extends Script implements Paintable{
 	private final int STATE_TELE = 2;
 	private final int STATE_BANK = 0;
 	private final int STATE_SMELT = 1;
-	
+
 	private final long EXP_SMITHING_START = Skill.SMITHING.getExperience();
 	private final int LVL_SMITHING_START = fixLevel(Skill.SMITHING.getRealLevel());
 
 	private final int ANI_SMELT = 899;
 
 	private final int OBJ_BANKBOOTH = 2213;
+	private final int OBJ_FURNACE_PREM = 3994,
+				      OBJ_FURNACE_FALLY = 11666,
+			          OBJ_FURNACE_CRAFTING_GUILD = 2643;
 
 	private final int ITEM_COAL = 453;
 	private final int ITEM_RUNEORE = 451;
@@ -71,7 +72,8 @@ public class kRuneSmelter extends Script implements Paintable{
 	private final int INTERFACE_SKILLS = 2492;
 
 	private final Area FURNACE_FALLY = new Area(new Tile(2970, 3375), new Tile(2980, 3375), new Tile(2980, 3367), new Tile(2970, 3367));
-	private final Area FURNCAE_PREMIUM = new Area(new Tile(2287, 3159), new Tile(2287, 3146), new Tile(2295, 3146), new Tile(2295, 3159));
+	private final Area FURNACE_PREMIUM = new Area(new Tile(2287, 3159), new Tile(2287, 3146), new Tile(2295, 3146), new Tile(2295, 3159));
+	private final Area FURNACE_CRAFTING_GUILD = new Area(new Tile(2926, 3294), new Tile(2944, 3294), new Tile(2944, 3275), new Tile(2926, 3275));
 	//End Constants
 
 	//AntiRandom
@@ -102,10 +104,6 @@ public class kRuneSmelter extends Script implements Paintable{
 
 		while(!guiDone){
 			Time.sleep(100);
-		}
-
-		if(premZone){
-			furnaceId = 3994;
 		}
 		strats.add(new Relog());
 		strats.add(new Antis());
@@ -151,7 +149,7 @@ public class kRuneSmelter extends Script implements Paintable{
 
 		@Override
 		public boolean activate() {
-			return lastState != STATE_SMELT && Players.getMyPlayer().getAnimation() != ANI_SMELT && !Players.getMyPlayer().isInCombat() && (FURNACE_FALLY.contains(Players.getMyPlayer().getLocation()) || FURNCAE_PREMIUM.contains(Players.getMyPlayer().getLocation()));
+			return lastState != STATE_SMELT && Players.getMyPlayer().getAnimation() != ANI_SMELT && !Players.getMyPlayer().isInCombat() && (FURNACE_FALLY.contains(Players.getMyPlayer().getLocation()) || FURNACE_PREMIUM.contains(Players.getMyPlayer().getLocation()) || FURNACE_CRAFTING_GUILD.contains(Players.getMyPlayer().getLocation()));
 		}
 
 		@Override
@@ -165,7 +163,7 @@ public class kRuneSmelter extends Script implements Paintable{
 					public boolean isValid() {
 						return Loader.getClient().getBackDialogId() == INTERFACE_SMELT;
 					}
-				}, 2500);
+				}, 4000);
 				Menu.sendAction(315, 655, 0, 7449);
 				Time.sleep(4500,5000);
 			}
@@ -182,10 +180,10 @@ public class kRuneSmelter extends Script implements Paintable{
 		@Override
 		public void execute() {
 			lastState = STATE_BANK;
-			if(!premZone){
+			if(falador){
 				Menu.sendAction(315, 151437312, 508, 1195);
 				Time.sleep(new SleepCondition() {
-					
+
 					@Override
 					public boolean isValid() {
 						return Calculations.distanceBetween(new Tile(3212, 3443), Players.getMyPlayer().getLocation()) < 10;
@@ -218,7 +216,7 @@ public class kRuneSmelter extends Script implements Paintable{
 
 		@Override
 		public boolean activate() {
-			return  lastState != STATE_TELE && !premZone && !FURNACE_FALLY.contains(Players.getMyPlayer().getLocation());
+			return  lastState != STATE_TELE && falador && !FURNACE_FALLY.contains(Players.getMyPlayer().getLocation());
 		}
 
 		@Override
@@ -298,6 +296,7 @@ public class kRuneSmelter extends Script implements Paintable{
 				System.out.println("Sandwich lady/Old man random has been completed");
 			}
 			rCount++;
+			lastState = STATE_SMELT;
 		}
 	}
 
@@ -314,29 +313,17 @@ public class kRuneSmelter extends Script implements Paintable{
 			return true;
 		}
 
-		public void execute(){
-			if (password.length() > 0){	 
-				System.out.println("Relogging");
-				if (!isLoggedIn()){
-					Keyboard.getInstance().sendKeys("");
-					sleep(6000);
-				}
-
-				if (!isLoggedIn()){
-					for (int i = 0; i < password.length(); i++){
-						Keyboard.getInstance().clickKey(KeyEvent.VK_BACK_SPACE);
-					}
-					Keyboard.getInstance().sendKeys(password);
-					sleep(6000);
-				}
-				lastState = STATE_SMELT;
+		public void execute(){ 
+			System.out.println("Relogging");
+			if (!isLoggedIn()){
+				Keyboard.getInstance().sendKeys("");
+				sleep(6000);
 			}
-			else
-			{
-				System.out.println("The script is being stopped since there is no password");
-				sleep(2500);
-				setState(Script.STATE_STOPPED);
+			if (!isLoggedIn()){
+				Keyboard.getInstance().sendKeys("");
+				sleep(6000);
 			}
+			lastState = STATE_SMELT;
 		}
 	}
 
@@ -346,50 +333,39 @@ public class kRuneSmelter extends Script implements Paintable{
 
 		private static final long serialVersionUID = 3124781341234L;
 		private JButton start;
-		private JPasswordField passwordField;
-		private JCheckBox premZoneCheck;
-		private JLabel premZoneLabel;
-		private JLabel passwordLabel;
 		private Container cont;
-		private Container premZoneCont;
-		private Container passwordCont;
-
+		private Container locationCont;
+		private JComboBox<String> locationSelector;
+		private JLabel locationLabel;
+		
+		private String[] locations = {"Falador", "Premium Zone", "Crafting Guild"};
+		
 		private final String TITLE = "kRuneSmelter";
-		private final int WIDTH = 250;
-		private final int HIEGHT = 100;
+		private final int WIDTH = 200;
+		private final int HIEGHT = 75;
 
 		public GUI(){
 			cont = new Container();
-			premZoneCont = new Container();
-			passwordCont = new Container();
+			locationCont = new Container();
 
 			setDefaultCloseOperation(EXIT_ON_CLOSE);
 			setSize(WIDTH, HIEGHT);
 			setTitle(TITLE);
 			setResizable(false);
 
+			locationSelector = new JComboBox<>(locations);
+			locationLabel = new JLabel(" Location: ");
+			
 			start = new JButton("Start");
 			start.addActionListener(this);
 
-			passwordField = new JPasswordField(15);
-
-			premZoneCheck = new JCheckBox();
-			premZoneLabel = new JLabel("Premium Zone: ");
-
-			passwordLabel = new JLabel("Password: ");
-
-			premZoneCont.setLayout(new BoxLayout(premZoneCont, BoxLayout.X_AXIS));
-			passwordCont.setLayout(new BoxLayout(passwordCont, BoxLayout.X_AXIS));
+			locationCont.setLayout(new BoxLayout(locationCont, BoxLayout.X_AXIS));
 			cont.setLayout(new BoxLayout(cont, BoxLayout.Y_AXIS));
 
-			premZoneCont.add(premZoneLabel);
-			premZoneCont.add(premZoneCheck);
-
-			passwordCont.add(passwordLabel);
-			passwordCont.add(passwordField);
-
-			cont.add(premZoneCont);
-			cont.add(passwordCont);
+			locationCont.add(locationLabel);
+			locationCont.add(locationSelector);
+			
+			cont.add(locationCont);
 			cont.add(start);
 
 			add(cont);
@@ -400,8 +376,18 @@ public class kRuneSmelter extends Script implements Paintable{
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			if(e.getSource().equals(start)){
-				premZone = premZoneCheck.isSelected();
-				password = new String(passwordField.getPassword());
+				switch(locationSelector.getSelectedIndex()){
+				case 0:
+					falador = true;
+					furnaceId = OBJ_FURNACE_FALLY;
+					break;
+				case 1:
+					furnaceId = OBJ_FURNACE_PREM;
+					break;
+				case 2:
+					furnaceId = OBJ_FURNACE_CRAFTING_GUILD;
+					break;
+				}
 				setVisible(false);
 				dispose();
 				timer = new org.parabot.environment.api.utils.Timer();
@@ -481,7 +467,7 @@ public class kRuneSmelter extends Script implements Paintable{
 		Mouse.getInstance().click(new Point(397,300));
 		Time.sleep(750,1250);
 	}
-	
+
 	private int fixLevel(int realLevel){
 		if(realLevel > 99){
 			realLevel = 99;
