@@ -57,7 +57,7 @@ public class kRuneSmelter extends Script implements Paintable{
 	private final int STATE_SMELT = 1;
 	
 	private final long EXP_SMITHING_START = Skill.SMITHING.getExperience();
-	private final int LVL_SMITHING_START = Skill.SMITHING.getRealLevel();
+	private final int LVL_SMITHING_START = fixLevel(Skill.SMITHING.getRealLevel());
 
 	private final int ANI_SMELT = 899;
 
@@ -474,11 +474,18 @@ public class kRuneSmelter extends Script implements Paintable{
 	}
 
 	private String getLvlString(){
-		return Skill.SMITHING.getRealLevel() + " (+" + (Skill.SMITHING.getRealLevel() - LVL_SMITHING_START) + ")";
+		return Skill.SMITHING.getRealLevel() + " (+" + (fixLevel(Skill.SMITHING.getRealLevel()) - LVL_SMITHING_START) + ")";
 	}
 
 	private void depositAll(){
 		Mouse.getInstance().click(new Point(397,300));
 		Time.sleep(750,1250);
+	}
+	
+	private int fixLevel(int realLevel){
+		if(realLevel > 99){
+			realLevel = 99;
+		}
+		return realLevel;
 	}
 }
