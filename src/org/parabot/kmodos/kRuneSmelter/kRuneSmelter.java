@@ -48,6 +48,7 @@ public class kRuneSmelter extends Script implements Paintable{
 	private int lastState = 1;
 	private int furnaceId = 11666;
 	private String status = "Waiting for input!";
+	private boolean forceInterface = false;
 
 	//Constants
 
@@ -109,7 +110,11 @@ public class kRuneSmelter extends Script implements Paintable{
 		strats.add(new Relog());
 		strats.add(new Antis());
 		strats.add(new Banker());
+		if(!forceInterface){
 		strats.add(new Smelt());
+		}else{
+			strats.add(new ForceInterfaceSmelt());
+		}
 		strats.add(new Teleport());
 		provide(strats);
 		return true;
@@ -136,7 +141,7 @@ public class kRuneSmelter extends Script implements Paintable{
 		g.drawString("Randoms Solved: " + rCount, 225, 285);
 		g.drawString("Smithing Exp: " + getExpString(), 225, 300);
 		g.drawString("Smithing Level: " + getLvlString(), 225, 315);
-		g.drawString("Status: " + status, 121, 330);
+		g.drawString("Status: " + status, 225, 330);
 	}
 
 	/*
@@ -146,7 +151,23 @@ public class kRuneSmelter extends Script implements Paintable{
 	/*
 	 *Strats 
 	 */
+	public class ForceInterfaceSmelt implements Strategy{
 
+		@Override
+		public boolean activate() {
+			return lastState != STATE_SMELT && Players.getMyPlayer().getAnimation() != ANI_SMELT && !Players.getMyPlayer().isInCombat();
+		}
+
+		@Override
+		public void execute() {
+			status = "Making Bars!";
+			lastState = STATE_SMELT;
+			Menu.sendAction(315, 655, 0, 7449);
+			Time.sleep(4500,5000);
+		}
+		
+	}
+	
 	public class Smelt implements Strategy{
 
 		@Override
@@ -345,7 +366,7 @@ public class kRuneSmelter extends Script implements Paintable{
 		private JComboBox<String> locationSelector;
 		private JLabel locationLabel;
 		
-		private String[] locations = {"Falador", "Premium Zone", "Crafting Guild"};
+		private String[] locations = {"Falador", "Premium Zone", "Crafting Guild", "Force Interface"};
 		
 		private final String TITLE = "kRuneSmelter";
 		private final int WIDTH = 200;
@@ -393,6 +414,9 @@ public class kRuneSmelter extends Script implements Paintable{
 					break;
 				case 2:
 					furnaceId = OBJ_FURNACE_CRAFTING_GUILD;
+					break;
+				case 3:
+					forceInterface = true;
 					break;
 				}
 				setVisible(false);
