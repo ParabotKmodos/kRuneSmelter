@@ -517,7 +517,7 @@ public class kRuneSmelter extends Script implements Paintable{
 	}
 
 	private String getLvlString(){
-		return Skill.SMITHING.getRealLevel() + " (+" + (fixLevel(Skill.SMITHING.getRealLevel()) - LVL_SMITHING_START) + ")";
+		return fixLevel(Skill.SMITHING.getRealLevel()) + " (+" + (fixLevel(Skill.SMITHING.getRealLevel()) - LVL_SMITHING_START) + ")";
 	}
 
 	private void depositAll(){
@@ -526,7 +526,7 @@ public class kRuneSmelter extends Script implements Paintable{
 	}
 
 	private int fixLevel(int realLevel){
-		if(realLevel > 99){
+		if(realLevel >= 99){
 			realLevel = 99;
 		}
 		return realLevel;
