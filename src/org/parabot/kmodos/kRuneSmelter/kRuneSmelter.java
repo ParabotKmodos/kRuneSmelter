@@ -78,7 +78,7 @@ public class kRuneSmelter extends Script implements Paintable{
 	//End Constants
 
 	//AntiRandom
-	private final int[] RANDOMS = { 410, 1091, 3117, 3022 };
+	private final int[] RANDOMS = { 410, 1091, 3117, 3022, 3351, 409 };
 	private int rCount = 0;
 	private final Area BOBS_ISLAND = new Area(new Tile(2511, 4765), new Tile(2511, 4790), new Tile(2542, 4790), new Tile(2542, 4765));
 
@@ -265,7 +265,6 @@ public class kRuneSmelter extends Script implements Paintable{
 
 		@Override
 		public void execute(){
-			status = "Solving Random!";
 			sleep(750);
 			Npc[] n = Npcs.getNearest(RANDOMS);
 			System.out.println("There is a random nearby!");
@@ -291,7 +290,7 @@ public class kRuneSmelter extends Script implements Paintable{
 				}
 				System.out.println("Bob's Island has been completed");
 			}
-			else if (n[0].getDef().getId() == 3022){
+			else if (n[0].getDef().getId() == 3022 || n[0].getDef().getId() == 3351 || n[0].getDef().getId() == 40){
 				System.exit(0);
 				System.out.println("A mod called a Genie random onto you.\n" +
 						"The client was closed to protect your account.");
@@ -301,8 +300,6 @@ public class kRuneSmelter extends Script implements Paintable{
 				sleep(1500);
 				System.out.println("Sandwich lady/Old man random has been completed");
 			}
-			rCount++;
-			lastState = STATE_SMELT;
 		}
 	}
 
